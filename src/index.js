@@ -1,7 +1,10 @@
+import axios from "axios";
+
 const formEl = document.forms["search-form"];
+const galleryEl =document.querySelector('.gallery')
 
 // console.dir(document);
-console.log(formEl);
+// console.log(formEl);
 
 formEl.addEventListener('submit', onFOrmSubmit)
 
@@ -30,6 +33,19 @@ const options = {
     safesearch: true,
 }
 
-fetch(BASE_URL, options).then(r => r.json()).then(console.log).catch(console.log)
+const url = `https://pixabay.com/api/?key=29142435-196ab0ea47673651fa34d9a29&q=${query}s&image_type=photo&per_page=40`
+return axios.get(url)
+.then(res => res.data.hits[0].webformatURL)
+.then(url => {
+    console.log('url', url);
+    const imgMarkup = `<li><img src="${url}" alt="img"></li>`
+    console.log('imgMarkup', imgMarkup);
+    galleryEl.insertAdjacentHTML('beforeend', imgMarkup)
+}).catch(console.log)
+// fetch(BASE_URL, options).then(r => r.json()).then(console.log).catch(console.log)
+
+// fetch(`https://pixabay.com/api/?key=29142435-196ab0ea47673651fa34d9a29&q=${query}s&image_type=photo`).then(r => r.json()).then(console.log).catch(console.log)
+
+
 
 }
