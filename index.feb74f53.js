@@ -1,0 +1,2 @@
+const e=document.forms["search-form"];console.log(e),e.addEventListener("submit",(function(e){e.preventDefault();const o=e.currentTarget.searchQuery.value;console.log(o),t=o,fetch("https://pixabay.com/api/",{headers:{"Content-Type":"application/json",key:"29142435-196ab0ea47673651fa34d9a29"},q:t,image_type:"photo",orientation:"horizontal",safesearch:!0}).then((e=>e.json())).then(console.log).catch(console.log);var t}));
+//# sourceMappingURL=index.feb74f53.js.map
