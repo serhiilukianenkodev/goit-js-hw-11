@@ -71,7 +71,7 @@ const cardMarkup = `
     <li class="photo-card">
         <a class="gallery__link" href="${largeImageURL}">
             <img src="${webformatURL}" alt="${tags}" loading="lazy" class = "gallery__image" />
-            </a>
+            
             <ul class="info">
                 <li class="info-item">
                 <b>Likes</b>
@@ -90,7 +90,7 @@ const cardMarkup = `
                 <span>${downloads}</span>
                 </li>
             </ul>
-        
+        </a>
     </li>`
 return cardMarkup; 
 }
