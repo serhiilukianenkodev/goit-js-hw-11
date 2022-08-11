@@ -1,4 +1,5 @@
 import axios from "axios";
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
 
@@ -25,7 +26,7 @@ function onFOrmSubmit(evt){
     console.log(searchQuery);
 
     clearGallery();
-    fetchImages(searchQuery).then(renderGallery).catch(console.log)
+    fetchImages(searchQuery).then(renderGallery).catch( Notify.failure)
 }
 
 
@@ -53,14 +54,16 @@ return axios.get(url)
 function renderGallery(data){
 
     if(!data)return
-    const {hits} = data;
+    const {hits, totalHits} = data;
     console.log(hits);
-
+    Notify.success(`Hooay! We found ${totalHits} images.`);
     const imagesMarkup = hits
     .reduce((markUp,hit) => markUp + createCardMarkup(hit), '')
 
     galleryEl.insertAdjacentHTML('beforeend', imagesMarkup)
     gallery.refresh()
+
+   
     
 }
 
