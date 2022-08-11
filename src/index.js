@@ -4,10 +4,61 @@ import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
 
 const formEl = document.forms["search-form"];
-const galleryEl =document.querySelector('.gallery')
+const galleryEl = document.querySelector('.gallery');
+const loadMoreBtn = document.querySelector('.load-more');
 
 // console.dir(document);
 // console.log(formEl);
+loadMoreBtn.style.display = 'none';
+// console.dir(loadMoreBtn.style.display);
+
+class FetchImages{
+    constructor(){
+        // this.path = path;
+        this.page = 1;
+        this.perPage = 40;
+        this.query = '';
+        // this.url = `https://pixabay.com/api/?key=29142435-196ab0ea47673651fa34d9a29&q=${query}s&image_type=photo&per_page=40&orientation=horizontal&safesearch=true`
+    }
+
+    // set path(newPath){
+    //     this.path = newPath
+    // }
+    // get path(){
+    //     return this.path
+    // }
+
+    setQuery(newQuery){
+        this.query = newQuery
+    }
+
+    setNextPage(){
+        this.page += 1;
+    }
+
+    // set page(newPage){
+    //     this.page = newPage
+    // }
+    // get page(){
+    //     return this.page
+    // }
+
+    // set query(newQuery){
+    //     this.perPage = newQuery
+    // }
+    // get query(){
+    //     return this.query
+    // }
+
+    getData(){
+        const url = `https://pixabay.com/api/?key=29142435-196ab0ea47673651fa34d9a29&q=${this.query}s&image_type=photo&per_page=${this.perPage}&page=${this.page}&orientation=horizontal&safesearch=true`
+        console.log('url', url);
+        
+        return axios.get(url)
+        .then(res => res.data)        
+    }
+}
+
 
 let gallery = new SimpleLightbox('.gallery a', {
 	captions: true,
@@ -18,7 +69,10 @@ let gallery = new SimpleLightbox('.gallery a', {
 	captionDelay: 250,
 	});
 
+const newFetchImages = new FetchImages()
+
 formEl.addEventListener('submit', onFOrmSubmit)
+loadMoreBtn.addEventListener('click', onloadMoreClick)
 
 function onFOrmSubmit(evt){
     evt.preventDefault();
@@ -26,8 +80,18 @@ function onFOrmSubmit(evt){
     console.log(searchQuery);
 
     clearGallery();
-    fetchImages(searchQuery).then(renderGallery).catch( Notify.failure)
+    
+    // fetchImages(searchQuery).then(renderGallery).catch( Notify.failure)
+    newFetchImages.setQuery(searchQuery);
+    newFetchImages.getData().then(renderGallery).catch( Notify.failure);
+
 }
+
+function onloadMoreClick(){
+    newFetchImages.setNextPage()
+    newFetchImages.getData().then(renderGallery).catch( Notify.failure)
+}
+
 
 
 
@@ -62,7 +126,7 @@ function renderGallery(data){
 
     galleryEl.insertAdjacentHTML('beforeend', imagesMarkup)
     gallery.refresh()
-
+    loadMoreBtn.style.display = '';
    
     
 }
