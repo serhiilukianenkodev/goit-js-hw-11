@@ -8,7 +8,7 @@ import {FetchImages} from './js/fetchImages'
 
 const formEl = document.forms["search-form"];
 const galleryEl = document.querySelector('.gallery');
-const loadMoreBtn = document.querySelector('.load-more');
+// const loadMoreBtn = document.querySelector('.load-more');
 
 let gallery = new SimpleLightbox('.gallery a', {
 	captions: true,
@@ -19,15 +19,15 @@ let gallery = new SimpleLightbox('.gallery a', {
 	captionDelay: 250,
 	});
 
-hideEl(loadMoreBtn);
+// hideEl(loadMoreBtn);
 const fetchImages = new FetchImages()
 
 formEl.addEventListener('submit', onFOrmSubmit)
-loadMoreBtn.addEventListener('click', onloadMoreClick)
+// loadMoreBtn.addEventListener('click', onloadMoreClick)
 
 function onFOrmSubmit(evt){
     evt.preventDefault();
-    hideEl(loadMoreBtn);
+    // hideEl(loadMoreBtn);
     const searchQuery = evt.currentTarget.searchQuery.value
     // console.log(searchQuery);
 
@@ -66,7 +66,7 @@ function renderGallery(data){
 
     galleryEl.insertAdjacentHTML('beforeend', imagesMarkup)
     gallery.refresh()
-    showEl(loadMoreBtn);
+    // showEl(loadMoreBtn);
     // smoothScrool()
 }
 
