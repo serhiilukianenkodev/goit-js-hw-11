@@ -1,0 +1,13 @@
+.load-more{
+    margin-bottom: 20px;
+    border-radius: 4px;
+    padding: 8px;
+    border-color: #b3c3ed;
+
+    // scale: 1;
+    transition: scale linear 150ms;
+}
+
+.load-more:hover, .load-more:focus{
+    scale: 1.05;
+}

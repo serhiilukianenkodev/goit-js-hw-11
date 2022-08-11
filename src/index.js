@@ -1,64 +1,14 @@
-import axios from "axios";
+
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
+import throttle from 'lodash.throttle';
+
+import {FetchImages} from './js/fetchImages'
 
 const formEl = document.forms["search-form"];
 const galleryEl = document.querySelector('.gallery');
 const loadMoreBtn = document.querySelector('.load-more');
-
-// console.dir(document);
-// console.log(formEl);
-loadMoreBtn.style.display = 'none';
-// console.dir(loadMoreBtn.style.display);
-
-class FetchImages{
-    constructor(){
-        // this.path = path;
-        this.page = 1;
-        this.perPage = 40;
-        this.query = '';
-        // this.url = `https://pixabay.com/api/?key=29142435-196ab0ea47673651fa34d9a29&q=${query}s&image_type=photo&per_page=40&orientation=horizontal&safesearch=true`
-    }
-
-    // set path(newPath){
-    //     this.path = newPath
-    // }
-    // get path(){
-    //     return this.path
-    // }
-
-    setQuery(newQuery){
-        this.query = newQuery
-    }
-
-    setNextPage(){
-        this.page += 1;
-    }
-
-    // set page(newPage){
-    //     this.page = newPage
-    // }
-    // get page(){
-    //     return this.page
-    // }
-
-    // set query(newQuery){
-    //     this.perPage = newQuery
-    // }
-    // get query(){
-    //     return this.query
-    // }
-
-    getData(){
-        const url = `https://pixabay.com/api/?key=29142435-196ab0ea47673651fa34d9a29&q=${this.query}s&image_type=photo&per_page=${this.perPage}&page=${this.page}&orientation=horizontal&safesearch=true`
-        console.log('url', url);
-        
-        return axios.get(url)
-        .then(res => res.data)        
-    }
-}
-
 
 let gallery = new SimpleLightbox('.gallery a', {
 	captions: true,
@@ -69,66 +19,55 @@ let gallery = new SimpleLightbox('.gallery a', {
 	captionDelay: 250,
 	});
 
-const newFetchImages = new FetchImages()
+hideEl(loadMoreBtn);
+const fetchImages = new FetchImages()
 
 formEl.addEventListener('submit', onFOrmSubmit)
 loadMoreBtn.addEventListener('click', onloadMoreClick)
 
 function onFOrmSubmit(evt){
     evt.preventDefault();
+    hideEl(loadMoreBtn);
     const searchQuery = evt.currentTarget.searchQuery.value
-    console.log(searchQuery);
+    // console.log(searchQuery);
 
     clearGallery();
     
-    // fetchImages(searchQuery).then(renderGallery).catch( Notify.failure)
-    newFetchImages.setQuery(searchQuery);
-    newFetchImages.getData().then(renderGallery).catch( Notify.failure);
+    fetchImages.setQuery(searchQuery);
+    fetchImages.getData()
+    .then(data => {
+        logMessage(data);
+        return renderGallery(data)})
+    .catch(e => Notify.failure('Sorry, there are no images matching your search query. Please try again.'));
+    
+    window.addEventListener('scroll', throttle(loadMore, 1000))
+    window.removeEventListener('scroll', throttle(loadMore, 1000))
 
 }
 
 function onloadMoreClick(){
-    newFetchImages.setNextPage()
-    newFetchImages.getData().then(renderGallery).catch( Notify.failure)
+    fetchImages.setNextPage()
+    fetchImages.getData().then(renderGallery).catch(e => Notify.failure("We're sorry, but you've reached the end of search results."))
 }
 
-
-
-
-function fetchImages(query) {
-// const API_KEY = "29142435-196ab0ea47673651fa34d9a29";
-// const BASE_URL = "https://pixabay.com/api/";
-// const options = {
-//     headers: {
-//     'Content-Type': 'application/json',
-//     key: API_KEY,
-
-//     },
-//     q: query,
-//     image_type: 'photo',
-//     orientation: 'horizontal',
-//     safesearch: true,
-// }
-
-const url = `https://pixabay.com/api/?key=29142435-196ab0ea47673651fa34d9a29&q=${query}s&image_type=photo&per_page=40&orientation=horizontal&safesearch=true`
-return axios.get(url)
-.then(res => res.data)
+function logMessage(data){
+        const {hits, totalHits} = data;
+    console.log(hits);
+    if( hits.length === 0) {throw new Error()}
+    Notify.success(`Hooay! We found ${totalHits} images.`);
 }
 
 function renderGallery(data){
 
-    if(!data)return
     const {hits, totalHits} = data;
-    console.log(hits);
-    Notify.success(`Hooay! We found ${totalHits} images.`);
+    // if(!data)return
     const imagesMarkup = hits
     .reduce((markUp,hit) => markUp + createCardMarkup(hit), '')
 
     galleryEl.insertAdjacentHTML('beforeend', imagesMarkup)
     gallery.refresh()
-    loadMoreBtn.style.display = '';
-   
-    
+    showEl(loadMoreBtn);
+    // smoothScrool()
 }
 
 function createCardMarkup(data) {
@@ -166,3 +105,44 @@ function clearGallery() {
     galleryEl.innerHTML = '';
 }
 
+function showEl(elem) {
+    elem.style.display = '';
+}
+
+function hideEl(elem) {
+    elem.style.display = 'none';
+}
+
+function smoothScrool(){
+    const { height: cardHeight } = document
+  .querySelector(".gallery")
+  .firstElementChild.getBoundingClientRect();
+
+window.scrollBy({
+  top: cardHeight * 2,
+  behavior: "smooth",
+});
+}
+
+function loadMore(){
+    // const loadMoreBlockPosition = galleryEl.getBoundingClientRect().top + scrollY;
+    const galleryHeight = galleryEl.offsetHeight;
+
+    // console.log('scrollY', scrollY);
+    // console.log('loadMoreBlockPosition', loadMoreBlockPosition);
+    // console.log('galleryHeight', galleryHeight);
+
+    console.log('compare', galleryHeight - scrollY, innerHeight * 2);
+
+    
+    const needToDownload = (galleryHeight - scrollY < innerHeight * 2)
+    console.log(needToDownload);
+
+    if (needToDownload) {
+        fetchImages.setNextPage()
+        fetchImages.getData().then(renderGallery)
+        .catch(e => {
+            Notify.failure("We're sorry, but you've reached the end of search results.")})
+    
+    }
+}
