@@ -1,6 +1,19 @@
 .search-form{
+  display: flex;
+  justify-content: center;
   text-align: center;
   padding: 10px;
   background-color: #5130bb;
   margin-bottom: 40px;
+}
+
+.search-form input{
+  border: none;
+  outline: none;
+}
+
+.search-btn{
+  padding: 5px;
+  border: none;
+  // outline: none;
 }

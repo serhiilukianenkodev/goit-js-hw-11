@@ -8,6 +8,7 @@ import {FetchImages} from './js/fetchImages'
 
 const formEl = document.forms["search-form"];
 const galleryEl = document.querySelector('.gallery');
+const loading = document.querySelector('.loading');
 // const loadMoreBtn = document.querySelector('.load-more');
 
 let gallery = new SimpleLightbox('.gallery a', {
@@ -24,50 +25,49 @@ const fetchImages = new FetchImages()
 
 formEl.addEventListener('submit', onFOrmSubmit)
 // loadMoreBtn.addEventListener('click', onloadMoreClick)
+const throttledLoadMore = throttle(loadMore, 1000)
 
 function onFOrmSubmit(evt){
     evt.preventDefault();
     // hideEl(loadMoreBtn);
     const searchQuery = evt.currentTarget.searchQuery.value
-    // console.log(searchQuery);
 
     clearGallery();
     
     fetchImages.setQuery(searchQuery);
     fetchImages.getData()
     .then(data => {
+
         logMessage(data);
         return renderGallery(data)})
     .catch(e => Notify.failure('Sorry, there are no images matching your search query. Please try again.'));
     
-    window.addEventListener('scroll', throttle(loadMore, 1000))
-    window.removeEventListener('scroll', throttle(loadMore, 1000))
-
+    window.addEventListener('scroll', throttledLoadMore)
 }
 
-function onloadMoreClick(){
-    fetchImages.setNextPage()
-    fetchImages.getData().then(renderGallery).catch(e => Notify.failure("We're sorry, but you've reached the end of search results."))
-}
+// function onloadMoreClick(){
+//     fetchImages.setNextPage()
+//     fetchImages.getData().then(renderGallery).catch(e => Notify.failure("We're sorry, but you've reached the end of search results."))
+// }
 
 function logMessage(data){
         const {hits, totalHits} = data;
-    console.log(hits);
+    // console.log(hits);
     if( hits.length === 0) {throw new Error()}
     Notify.success(`Hooay! We found ${totalHits} images.`);
 }
 
 function renderGallery(data){
 
-    const {hits, totalHits} = data;
-    // if(!data)return
+    const {hits} = data;
     const imagesMarkup = hits
     .reduce((markUp,hit) => markUp + createCardMarkup(hit), '')
 
+    loading.classList.remove('show');
     galleryEl.insertAdjacentHTML('beforeend', imagesMarkup)
     gallery.refresh()
     // showEl(loadMoreBtn);
-    // smoothScrool()
+    smoothScrool()
 }
 
 function createCardMarkup(data) {
@@ -105,13 +105,13 @@ function clearGallery() {
     galleryEl.innerHTML = '';
 }
 
-function showEl(elem) {
-    elem.style.display = '';
-}
+// function showEl(elem) {
+//     elem.style.display = '';
+// }
 
-function hideEl(elem) {
-    elem.style.display = 'none';
-}
+// function hideEl(elem) {
+//     elem.style.display = 'none';
+// }
 
 function smoothScrool(){
     const { height: cardHeight } = document
@@ -125,24 +125,27 @@ window.scrollBy({
 }
 
 function loadMore(){
-    // const loadMoreBlockPosition = galleryEl.getBoundingClientRect().top + scrollY;
     const galleryHeight = galleryEl.offsetHeight;
 
-    // console.log('scrollY', scrollY);
-    // console.log('loadMoreBlockPosition', loadMoreBlockPosition);
-    // console.log('galleryHeight', galleryHeight);
-
-    console.log('compare', galleryHeight - scrollY, innerHeight * 2);
-
+    // const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+	// console.log( { scrollTop, scrollHeight, clientHeight });
+    // const need = clientHeight + scrollTop >= scrollHeight - 5;
+    // console.log(need);
+    //
     
     const needToDownload = (galleryHeight - scrollY < innerHeight * 2)
-    console.log(needToDownload);
+    // console.log(needToDownload);
 
     if (needToDownload) {
+        loading.classList.add('show');
         fetchImages.setNextPage()
         fetchImages.getData().then(renderGallery)
         .catch(e => {
-            Notify.failure("We're sorry, but you've reached the end of search results.")})
-    
+            Notify.failure("We're sorry, but you've reached the end of search results.")
+            window.removeEventListener('scroll', throttledLoadMore)
+            loading.classList.remove('show');
+        })
+            
+
     }
 }
